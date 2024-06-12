@@ -441,14 +441,16 @@ app.registerExtension({
           setMouseCoordinates(event)
           isDrawing = true
           ctx.strokeStyle = selectedColor
-          ctx.lineCap = 'round'
-          ctx.lineJoin = 'round'
           ctx.lineWidth = brushSize
           ctx.beginPath()
           ctx.moveTo(mouseX, mouseY)
+          ctx.lineCap = 'round'
+          ctx.lineJoin = 'round'
         })
 
         canvas.addEventListener('mousemove', function (event) {
+          ctx.lineCap = 'round'
+          ctx.lineJoin = 'round'
           setMouseCoordinates(event)
           if (isDrawing) {
             ctx.lineTo(mouseX, mouseY)
@@ -470,8 +472,8 @@ app.registerExtension({
           const rect = canvas.getBoundingClientRect()
           const scaleX = canvas.width / rect.width
           const scaleY = canvas.height / rect.height
-          mouseX = (e.clientX - rect.left) * scaleX
-          mouseY = (e.clientY - rect.top) * scaleY
+          mouseX = (e.clientX - rect.left) * scaleX + 0.5
+          mouseY = (e.clientY - rect.top) * scaleY + 0.5
         }
 
         const widget = {
