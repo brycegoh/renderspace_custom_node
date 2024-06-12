@@ -1,7 +1,7 @@
 import { app } from '../../scripts/app.js'
 import { api } from '../../scripts/api.js'
 
-const DEBOUNCE_QUEUE_INTERVAL_MS = 500
+const DEBOUNCE_QUEUE_INTERVAL_MS = 1000
 
 const resolutions = [
   { label: '1024 x 1024 (default)', width: 1024, height: 1024 },
@@ -436,8 +436,10 @@ app.registerExtension({
         })
 
         setCanvasSize()
+        const debouncedQueuePrompt = debounce(() => app.queuePrompt(), DEBOUNCE_QUEUE_INTERVAL_MS);
 
         canvas.addEventListener('mousedown', function (event) {
+          debouncedQueuePrompt.cancel();
           setMouseCoordinates(event)
           isDrawing = true
           ctx.strokeStyle = selectedColor
@@ -457,8 +459,7 @@ app.registerExtension({
             ctx.stroke()
           }
         })
-        
-        const debouncedQueuePrompt = debounce(() => app.queuePrompt(), DEBOUNCE_QUEUE_INTERVAL_MS);
+
         canvas.addEventListener('mouseup', function (event) {
           setMouseCoordinates(event)
           isDrawing = false
@@ -516,8 +517,17 @@ function getContrastYIQ(hexcolor) {
 
 function debounce(func, wait) {
   let timeout;
-  return function(...args) {
-    clearTimeout(timeout);
+  function debounced(...args) {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
     timeout = setTimeout(() => func.apply(this, args), wait);
+  }
+  debounced.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
   };
+  return debounced;
 }
