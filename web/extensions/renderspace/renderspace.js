@@ -1,7 +1,7 @@
 import { app } from '../../scripts/app.js'
 import { api } from '../../scripts/api.js'
 
-const DEBOUNCE_QUEUE_INTERVAL_MS = 1000
+const DEBOUNCE_QUEUE_INTERVAL_MS = 500
 
 const resolutions = [
   { label: '1024 x 1024 (default)', width: 1024, height: 1024 },
