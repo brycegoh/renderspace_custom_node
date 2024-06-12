@@ -442,6 +442,7 @@ app.registerExtension({
           isDrawing = true
           ctx.strokeStyle = selectedColor
           ctx.lineCap = 'round'
+          ctx.lineJoin = 'round'
           ctx.lineWidth = brushSize
           ctx.beginPath()
           ctx.moveTo(mouseX, mouseY)
