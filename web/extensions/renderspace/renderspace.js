@@ -1,7 +1,7 @@
 import { app } from '../../scripts/app.js'
 import { api } from '../../scripts/api.js'
 
-const DEBOUNCE_QUEUE_INTERVAL_MS = 500
+const DEBOUNCE_QUEUE_INTERVAL_MS = 200
 
 const resolutions = [
   { label: '1024 x 1024 (default)', width: 1024, height: 1024 },
@@ -304,6 +304,12 @@ app.registerExtension({
         brushSizeWrapper.appendChild(brushSizeInput)
         toolsContainer.appendChild(brushSizeWrapper)
 
+        const eraserButton = document.createElement('button')
+        eraserButton.textContent = 'Toggle Eraser'
+        eraserButton.style.width = '100%'
+        eraserButton.style.marginBottom = '10px'
+        toolsContainer.appendChild(eraserButton)
+
         const fillCanvasButton = document.createElement('button')
         fillCanvasButton.textContent = 'Fill Canvas'
         fillCanvasButton.style.width = '100%'
@@ -332,6 +338,12 @@ app.registerExtension({
         realtimeQueueWrapper.appendChild(realtimeQueueCheckbox);
         toolsContainer.appendChild(realtimeQueueWrapper);
 
+        const uploadImageInput = document.createElement('input')
+        uploadImageInput.type = 'file'
+        uploadImageInput.style.width = '100%'
+        uploadImageInput.style.marginBottom = '10px'
+        toolsContainer.appendChild(uploadImageInput)
+
         const historyContainer = document.createElement('div')
         historyContainer.style.width = '100%'
         historyContainer.style.marginBottom = '10px'
@@ -349,6 +361,7 @@ app.registerExtension({
         let brushSize = parseInt(brushSizeInput.value, 10)
         let history = []
         let historyColors = []
+        let eraserMode = false
 
         const setNodeSize = () => {
           setTimeout(() => {
@@ -435,6 +448,39 @@ app.registerExtension({
           }
         })
 
+        eraserButton.addEventListener('click', () => {
+          eraserMode = !eraserMode
+          eraserButton.textContent = eraserMode ? 'Switch to Brush' : 'Toggle Eraser'
+        })
+
+        uploadImageInput.addEventListener('change', (e) => {
+          const file = e.target.files[0]
+          if (file) {
+            const reader = new FileReader()
+            reader.onload = function (event) {
+              const img = new Image()
+              img.onload = function () {
+                // Set the selectedResolution to the image's resolution
+                selectedResolution = {
+                  width: img.width,
+                  height: img.height,
+                  label: `${img.width}x${img.height}`
+                }
+                
+                // Resize the canvas to match the image resolution
+                setCanvasSize()
+        
+                // Draw the uploaded image onto the canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+                saveHistory()
+              }
+              img.src = event.target.result
+            }
+            reader.readAsDataURL(file)
+          }
+        })
+
         setCanvasSize()
         const debouncedQueuePrompt = debounce(() => app.queuePrompt(), DEBOUNCE_QUEUE_INTERVAL_MS);
 
@@ -442,7 +488,7 @@ app.registerExtension({
           debouncedQueuePrompt.cancel();
           setMouseCoordinates(event)
           isDrawing = true
-          ctx.strokeStyle = selectedColor
+          ctx.strokeStyle = eraserMode ? 'white' : selectedColor
           ctx.lineWidth = brushSize
           ctx.beginPath()
           ctx.moveTo(mouseX, mouseY)
