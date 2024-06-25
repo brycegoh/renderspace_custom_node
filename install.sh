@@ -4,5 +4,5 @@ fi
 if [ -d "../../web/extensions/renderspace" ]; then
   rm -r ../../web/extensions/renderspace
 fi
-mv custom_nodes/renderspace ../
-mv web/extensions/renderspace ../../web/extensions/
+cp custom_nodes/renderspace ../
+cp web/extensions/renderspace ../../web/extensions/
