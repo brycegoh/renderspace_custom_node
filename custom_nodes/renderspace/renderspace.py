@@ -165,6 +165,8 @@ def color_distance(c1, c2):
     return np.linalg.norm(c1 - c2)
 
 def is_valid_color(color):
+    if np.array_equal(color, BLACK) or np.array_equal(color, WHITE):
+        return True
     return any(np.array_equal(color, valid_color) for valid_color in COLORS)
 
 def get_surrounding_valid_pixels(array, x, y):
@@ -196,15 +198,22 @@ def replace_invalid_colors(array):
 def find_and_draw_contours(np_image):
     contour_image = np_image.copy()
     
+    # Find all unique colors in the image
     unique_colors = {tuple(color) for color in np_image.reshape(-1, np_image.shape[-1])}
     unique_colors.discard(tuple(BLACK))
     unique_colors.discard(tuple(WHITE))
     
     for color in unique_colors:
         color = np.array(color, dtype=np.uint8)
+        
+        # Create a binary mask for the current color
         mask = cv2.inRange(np_image, color, color)
+        
+        # Find contours on the mask
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(contour_image, contours, -1, (0, 0, 0), 3)
+        
+        # Draw all contours with white color on the original image
+        cv2.drawContours(contour_image, contours, -1, (255, 255, 255), 1)
     
     return contour_image
 
@@ -220,13 +229,13 @@ class RenderSpace:
     FUNCTION = "func"
 
     def func(self, canvas_data):
-        b64 = canvas_data.split(",")[1]
-        image = Image.open(BytesIO(base64.b64decode(b64))).convert("RGB")
-        np_image = np.array(image)        
-        np_image = replace_invalid_colors(np_image)
-        np_image = find_and_draw_contours(np_image)
+        try:
+            b64 = canvas_data.split(",")[1]
+            image = Image.open(BytesIO(base64.b64decode(b64))).convert("RGB")
+            np_image = np.array(image)        
 
-        image = np_image.astype(np.float32) / 255.0
-        image = torch.from_numpy(image).unsqueeze(0)
-        
+            image = np_image.astype(np.float32) / 255.0
+            image = torch.from_numpy(image).unsqueeze(0)
+        except Exception as e:
+            raise Exception(f"Error processing image: {str(e)}")
         return (image,)
